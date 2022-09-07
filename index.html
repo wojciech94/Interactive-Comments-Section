@@ -22,6 +22,7 @@
       <div class="comment-box__header">
         <img class="comment-box__header__image" src="./src/img/image-amyrobson.png" alt="Post author"></img>
         <div class="comment-box__header__name">amyrobson</div>
+        <div class="comment-box__header__owner">you</div>
         <div class="comment-box__header__update">1 month ago</div>
       </div>
       <p class="comment-box__text">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Id quibusdam provident
@@ -34,7 +35,7 @@
           <button class="comment-box__edit__vote--minus"></button>
         </div>
         <button class="comment-box__edit__reply">
-          <div class="comment-box__edit__reply__icon"></div>
+          <div class="comment-icon comment-box__edit__reply__icon"></div>
           <p class="comment-box__edit__reply__text">Reply</p>
         </button>
       </div>
@@ -54,10 +55,22 @@
           <p class="comment-box__edit__vote__stats">5</p>
           <button class="comment-box__edit__vote--minus"></button>
         </div>
-        <button class="comment-box__edit__reply">
-          <div class="comment-box__edit__reply__icon"></div>
-          <p class="comment-box__edit__reply__text">Reply</p>
-        </button>
+        <div class="comment-box__edit__manage">
+          <button class="comment-box__edit__manage__item comment-box__edit__manage__item--delete">
+            <div class="comment-icon comment-box__edit__manage__item--delete__icon">
+            </div>
+            <p class="comment-box__edit__manage__item--delete__text">
+              delete
+            </p>
+          </button>
+          <button class="comment-box__edit__manage__item comment-box__edit__manage__item--edit">
+            <div class="comment-icon comment-box__edit__manage__item--edit__icon">
+            </div>
+            <p class="comment-box__edit__manage__item--edit__text">
+              edit
+            </p>
+          </button>
+        </div>
       </div>
     </div>
   </main>
