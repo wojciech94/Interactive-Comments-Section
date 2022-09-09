@@ -16,7 +16,6 @@ p {
 .comment-icon {
   width: 12px;
   height: 12px;
-  margin: 5px;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -44,7 +43,7 @@ body .container .comment-box {
   align-items: center;
   margin-top: 20px;
   padding: 10px 0;
-  width: 50%;
+  width: 75%;
   max-width: 768px;
   min-width: 360px;
   height: 100%;
@@ -70,7 +69,8 @@ body .container .comment-box__header__name {
 body .container .comment-box__header__owner {
   font-weight: 500;
   font-size: 1.6rem;
-  padding: 3px;
+  padding: 3px 5px;
+  margin: 0 5px;
   border-radius: 3px;
   color: #fff;
   background-color: hsl(238deg, 40%, 52%);
@@ -164,6 +164,7 @@ body .container .comment-box__edit__manage {
   align-items: center;
 }
 body .container .comment-box__edit__manage__item {
+  margin: 0 5px;
   display: flex;
   align-items: center;
   border: none;
@@ -233,6 +234,44 @@ body .attribution {
 }
 body .attribution a {
   color: hsl(228deg, 45%, 44%);
+}
+
+@media (min-width: 992px) {
+  body .container .comment-box {
+    position: relative;
+  }
+  body .container .comment-box__header {
+    padding: 0 50px;
+  }
+  body .container .comment-box__text {
+    padding: 10px 20px 10px 56px;
+  }
+  body .container .comment-box__edit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 80px;
+  }
+  body .container .comment-box__edit__vote {
+    position: absolute;
+    height: 100%;
+    top: 25%;
+    flex-direction: column;
+  }
+  body .container .comment-box__edit__reply {
+    position: absolute;
+    right: 15px;
+    top: 25px;
+  }
+  body .container .comment-box__edit__manage {
+    position: absolute;
+    right: 15px;
+    top: 25px;
+  }
+  body .container .comment-box__footer {
+    position: absolute;
+    height: 100%;
+  }
 }
 
 /*# sourceMappingURL=style.css.map */
