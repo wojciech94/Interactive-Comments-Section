@@ -10,6 +10,52 @@ let data1
 let user1
 let comments
 let test
+let curUsr
+let testComment
+let testReply
+let allComments = []
+let allReplies = []
+
+class User {
+	constructor(currentUser) {
+		this.userName = currentUser.username
+		this.image = currentUser.image.png
+	}
+}
+
+class Comment {
+	constructor(comment, mainId) {
+		this.id = comment.id
+		this.content = comment.content
+		this.date = comment.createdAt
+		this.score = comment.score
+		this.user = new User(comment.user)
+		this.replies = createReplies(comment.replies, mainId)
+		this.mainId = mainId
+	}
+}
+
+class Reply {
+	constructor(reply, parentId) {
+		this.id = reply.id
+		this.content = reply.content
+		this.date = reply.createdAt
+		this.score = reply.score
+		this.user = new User(reply.user)
+		this.replyTo = reply.replyingTo
+		this.parentId = parentId
+	}
+}
+
+//extract and modify reply object from json
+function createReplies(replies, parentId) {
+	let reps = []
+	replies.forEach(reply => {
+		let rep = new Reply(reply, parentId)
+		reps.push(rep)
+	})
+	return reps
+}
 
 const fetchData = () => {
 	fetch('data.json')
@@ -17,6 +63,7 @@ const fetchData = () => {
 		.then(data => {
 			data1 = data
 			user1 = data1.currentUser
+			curUsr = new User(user1)
 			comments = data1.comments
 			getComments(comments)
 			createAddCommentPart(false)
@@ -24,51 +71,62 @@ const fetchData = () => {
 }
 
 const getComments = comments => {
-	comments.forEach(element => {
-		const content = element.content
-		const createdDate = element.createdAt
-		const id = element.id
-		const score = element.score
-		const replies = element.replies
-		const user = element.user
-		const image = user.image.png
-		const name = user.username
+	comments.forEach((element, parentId) => {
+		testComment = new Comment(element, parentId)
+		allComments.push(testComment)
 
-		createComment(image, name, createdDate, content, id, score)
+		createComment(
+			testComment.user.image,
+			testComment.user.userName,
+			testComment.date,
+			testComment.content,
+			testComment.id,
+			testComment.score,
+			parentId
+		)
 
-		if (replies.length > 0) {
-			replies.forEach(reply => {
-				const replyContent = reply.content
-				const replyDate = reply.createdAt
-				const replyId = reply.id
-				const replyScore = reply.score
-				const replyUser = reply.user
-				const replyTarget = reply.replyingTo
-				const replyImage = replyUser.image.png
-				const replyName = replyUser.username
-
-				createComment(replyImage, replyName, replyDate, replyContent, replyId, replyScore, replyTarget)
+		if (testComment.replies.length > 0) {
+			testComment.replies.forEach(reply => {
+				allReplies.push(reply)
+				createComment(
+					reply.user.image,
+					reply.user.userName,
+					reply.date,
+					reply.content,
+					reply.id,
+					reply.score,
+					parentId,
+					reply.replyTo
+				)
 			})
 		}
 	})
 }
 
-function createComment(image, name, date, content, id, score, replyTo = null) {
+function createComment(image, name, date, content, id, score, parentId, replyTo = null) {
 	const boxDiv = document.createElement('div')
 	boxDiv.dataset.id = id
 	const headerPart = createHeaderPart(image, name, date)
 	const textPart = createTextPart(content, replyTo)
 	const editPart = createEditPart(score, name)
 	boxDiv.classList.add('comment-box')
-	if (replyTo != null) {
-		boxDiv.classList.add('comment-response')
-	} else {
-		//boxDiv.dataset.postId =
-	}
 	boxDiv.appendChild(headerPart)
 	boxDiv.appendChild(textPart)
 	boxDiv.appendChild(editPart)
-	container.appendChild(boxDiv)
+	if (replyTo != null) {
+		boxDiv.classList.add('comment-response')
+		let bfElement = container.querySelector(`.comment-box[data-parent-id="${parentId + 1}"]`)
+		boxDiv.dataset.parentId = parentId
+		if (bfElement != null) {
+			console.log('Found parent div')
+		} else {
+			console.log('Last parent')
+			container.appendChild(boxDiv)
+		}
+	} else {
+		boxDiv.dataset.mainId = parentId
+		container.appendChild(boxDiv)
+	}
 	return boxDiv
 }
 
@@ -215,6 +273,15 @@ const createAddCommentPart = (reply = true) => {
 
 	sendBtn = submitBtn
 	sendBtn.addEventListener('click', pushComment)
+}
+
+const saveUser = user => {
+	localStorage.setItem('currentUser', JSON.stringify(user))
+}
+
+const getUser = () => {
+	let user = localStorage.getItem('currentUser')
+	test = JSON.parse(user)
 }
 
 document.addEventListener('DOMContentLoaded', fetchData)
