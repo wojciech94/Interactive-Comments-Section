@@ -7,12 +7,14 @@ const container = document.querySelector('.container')
 let sendBtn = document.querySelector('.comment-box__footer__submit__btn')
 
 let data1
-let user1
 let comments
+let cb
 let test
 let curUsr
 let testComment
 let testReply
+let nextMainId = 0
+let lastId = 0
 let allComments = []
 let allReplies = []
 
@@ -62,11 +64,11 @@ const fetchData = () => {
 		.then(response => response.json())
 		.then(data => {
 			data1 = data
-			user1 = data1.currentUser
-			curUsr = new User(user1)
+			curUsr = new User(data1.currentUser)
 			comments = data1.comments
 			getComments(comments)
-			createAddCommentPart(false)
+			lastId = allComments.length + allReplies.length
+			addCommentPart()
 		})
 }
 
@@ -74,6 +76,7 @@ const getComments = comments => {
 	comments.forEach((element, parentId) => {
 		testComment = new Comment(element, parentId)
 		allComments.push(testComment)
+		nextMainId++
 
 		createComment(
 			testComment.user.image,
@@ -103,12 +106,13 @@ const getComments = comments => {
 	})
 }
 
+//Create comment from json data or local storage
 function createComment(image, name, date, content, id, score, parentId, replyTo = null) {
 	const boxDiv = document.createElement('div')
 	boxDiv.dataset.id = id
 	const headerPart = createHeaderPart(image, name, date)
 	const textPart = createTextPart(content, replyTo)
-	const editPart = createEditPart(score, name)
+	const editPart = createEditPart(score, name, parentId)
 	boxDiv.classList.add('comment-box')
 	boxDiv.appendChild(headerPart)
 	boxDiv.appendChild(textPart)
@@ -142,7 +146,7 @@ function createHeaderPart(imgSrc, name, update) {
 	nameDiv.textContent = name
 	headerDiv.append(img)
 	headerDiv.append(nameDiv)
-	if (user1.name === name) {
+	if (curUsr.userName === name) {
 		const ownerDiv = document.createElement('div')
 		ownerDiv.classList.add('comment-box__header__owner')
 		ownerDiv.textContent = 'you'
@@ -171,7 +175,7 @@ function createTextPart(content, replyTo) {
 	return pBox
 }
 
-function createEditPart(score, name) {
+function createEditPart(score, name, parentId) {
 	const editPart = document.createElement('div')
 	editPart.classList.add('comment-box__edit')
 	const voteDiv = document.createElement('div')
@@ -183,7 +187,7 @@ function createEditPart(score, name) {
 	voteStats.textContent = score
 	const voteMinus = document.createElement('button')
 	voteMinus.classList.add('comment-box__edit__vote--minus')
-	if (user1.username === name) {
+	if (curUsr.userName === name) {
 		const manageDiv = document.createElement('div')
 		manageDiv.classList.add('comment-box__edit__manage')
 		const delBtn = document.createElement('button')
@@ -204,6 +208,8 @@ function createEditPart(score, name) {
 		const editText = document.createElement('p')
 		editText.classList.add('comment-box__edit__manage__item--edit__text')
 		editText.textContent = 'Edit'
+		delBtn.dataset.parentId = parentId
+		editBtn.dataset.parentId = parentId
 		editPart.append(voteDiv, manageDiv)
 		manageDiv.append(delBtn, editBtn)
 		delBtn.append(delIcon, delText)
@@ -218,26 +224,17 @@ function createEditPart(score, name) {
 		const replyText = document.createElement('p')
 		replyText.classList.add('comment-box__edit__reply__text')
 		replyText.textContent = 'Reply'
+		replyButton.dataset.parentId = parentId
 		editPart.append(voteDiv, replyButton)
 		replyButton.append(replyIcon, replyText)
-		replyButton.addEventListener('click', createAddCommentPart)
+		replyButton.addEventListener('click', addReplyPart)
 	}
 	voteDiv.append(votePlus, voteStats, voteMinus)
 
 	return editPart
 }
 
-const pushComment = () => {
-	const now = new Date().getTime()
-	const input = document.querySelector('.add-comment__text__input')
-	const content = input.value
-	input.value = ''
-	const addCommentBox = document.querySelector('.add-comment')
-	const newComment = createComment(user1.image.png, user1.username, now, content, 0)
-	container.insertBefore(newComment, addCommentBox)
-}
-
-const createAddCommentPart = (reply = true) => {
+const createAddCommentPart = () => {
 	const commentBox = document.createElement('div')
 	commentBox.classList.add('comment-box')
 	commentBox.classList.add('add-comment')
@@ -246,33 +243,66 @@ const createAddCommentPart = (reply = true) => {
 	const commentFooter = document.createElement('div')
 	const textArea = document.createElement('textarea')
 	textArea.name = 'comment'
-	textArea.id = '0'
 	textArea.placeholder = 'Add a comment...'
 	textArea.classList.add('add-comment__text__input')
 	commentFooter.classList.add('add-comment__footer')
 	const footerImg = document.createElement('img')
 	footerImg.classList.add('add-comment__footer__image')
 	footerImg.alt = 'Post owner'
-	footerImg.src = user1.image.png
+	footerImg.src = curUsr.image
 	const submitDiv = document.createElement('div')
 	submitDiv.classList.add('add-comment__footer__submit')
 	const submitBtn = document.createElement('button')
 	submitBtn.classList.add('add-comment__footer__submit__btn')
-	if (reply) {
-		submitBtn.textContent = 'REPLY'
-		commentBox.classList.add('comment-response')
-	} else {
-		submitBtn.textContent = 'SEND'
-	}
 
 	container.append(commentBox)
 	commentBox.append(commentText, commentFooter)
 	commentText.append(textArea)
 	commentFooter.append(footerImg, submitDiv)
 	submitDiv.append(submitBtn)
+	return commentBox
+}
 
-	sendBtn = submitBtn
-	sendBtn.addEventListener('click', pushComment)
+const addCommentPart = () => {
+	const commentBox = createAddCommentPart()
+	commentBox.classList.add('main-comment')
+	const submitBtn = commentBox.querySelector('.add-comment__footer__submit__btn')
+	submitBtn.textContent = 'SEND'
+	submitBtn.addEventListener('click', pushComment)
+}
+
+const addReplyPart = e => {
+	const commentBox = createAddCommentPart()
+	let id = e.target.parentNode.dataset.parentId
+	let nextId = Number(id) + 1
+	const submitBtn = commentBox.querySelector('.add-comment__footer__submit__btn')
+	submitBtn.textContent = 'REPLY'
+	commentBox.classList.add('comment-response')
+	commentBox.dataset.parentId = id
+	submitBtn.addEventListener('click', pushReply)
+	let beforeElement = container.querySelector(`.comment-box[data-main-id="${nextId}"]`)
+	if (beforeElement != null) {
+		container.insertBefore(commentBox, beforeElement)
+	} else {
+		const addCommentBox = document.querySelector('.main-comment')
+		container.insertBefore(commentBox, addCommentBox)
+	}
+}
+
+const pushComment = () => {
+	lastId++
+	const now = new Date().getTime()
+	const input = document.querySelector('.add-comment__text__input')
+	const content = input.value
+	input.value = ''
+	const addCommentBox = document.querySelector('.main-comment')
+	const newComment = createComment(curUsr.image, curUsr.userName, now, content, lastId, 0, nextMainId)
+
+	container.insertBefore(newComment, addCommentBox)
+}
+
+const pushReply = e => {
+	lastId++
 }
 
 const saveUser = user => {
