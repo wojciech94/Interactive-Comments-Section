@@ -19,7 +19,22 @@
 				},
 				"username": "amyrobson"
 			},
-			"replies": []
+			"replies": [
+				{
+					"id": 3,
+					"content": "I mostly agree with you, but there is still room for improvement in code quality",
+					"createdAt": "1 week ago",
+					"score": 4,
+					"replyingTo": "amyrobson",
+					"user": {
+						"image": {
+							"png": "./src/img/image-ramsesmiron.png",
+							"webp": "./src/img/image-ramsesmiron.webp"
+						},
+						"username": "ramsesmiron"
+					}
+				}
+			]
 		},
 		{
 			"id": 2,
@@ -35,7 +50,7 @@
 			},
 			"replies": [
 				{
-					"id": 3,
+					"id": 4,
 					"content": "If you're still new, I'd recommend focusing on the fundamentals of HTML, CSS, and JS before considering React. It's very tempting to jump ahead but lay a solid foundation first.",
 					"createdAt": "1 week ago",
 					"score": 4,
@@ -49,7 +64,7 @@
 					}
 				},
 				{
-					"id": 4,
+					"id": 5,
 					"content": "I couldn't agree more with this. Everything moves so fast and it always seems like everyone knows the newest library/framework. But the fundamentals are what stay constant.",
 					"createdAt": "2 days ago",
 					"score": 2,
