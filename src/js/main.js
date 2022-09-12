@@ -121,10 +121,7 @@ function createComment(image, name, date, content, id, score, parentId, replyTo 
 		boxDiv.classList.add('comment-response')
 		let bfElement = container.querySelector(`.comment-box[data-parent-id="${parentId + 1}"]`)
 		boxDiv.dataset.parentId = parentId
-		if (bfElement != null) {
-			console.log('Found parent div')
-		} else {
-			console.log('Last parent')
+		if (bfElement == null) {
 			container.appendChild(boxDiv)
 		}
 	} else {
@@ -215,6 +212,7 @@ function createEditPart(score, name, parentId) {
 		delBtn.append(delIcon, delText)
 		editBtn.append(editIcon, editText)
 	} else {
+		console.log('ReplyTo:' + name)
 		const replyButton = document.createElement('button')
 		replyButton.classList.add('comment-box__edit__reply')
 		replyButton.dataset.replyTarget = name
@@ -274,9 +272,12 @@ const addCommentPart = () => {
 const addReplyPart = e => {
 	const commentBox = createAddCommentPart()
 	let id = e.target.parentNode.dataset.parentId
+	let target = e.target.parentNode.dataset.replyTarget
+	console.log(test)
 	let nextId = Number(id) + 1
 	const submitBtn = commentBox.querySelector('.add-comment__footer__submit__btn')
 	submitBtn.textContent = 'REPLY'
+	submitBtn.dataset.replyTarget = target
 	commentBox.classList.add('comment-response')
 	commentBox.dataset.parentId = id
 	submitBtn.addEventListener('click', pushReply)
@@ -292,10 +293,10 @@ const addReplyPart = e => {
 const pushComment = () => {
 	lastId++
 	const now = new Date().getTime()
-	const input = document.querySelector('.add-comment__text__input')
+	const addCommentBox = document.querySelector('.main-comment')
+	const input = addCommentBox.querySelector('.add-comment__text__input')
 	const content = input.value
 	input.value = ''
-	const addCommentBox = document.querySelector('.main-comment')
 	const newComment = createComment(curUsr.image, curUsr.userName, now, content, lastId, 0, nextMainId)
 
 	container.insertBefore(newComment, addCommentBox)
@@ -303,6 +304,15 @@ const pushComment = () => {
 
 const pushReply = e => {
 	lastId++
+	const eventTarget = e.target
+	const replyTo = eventTarget.dataset.replyTarget
+	const now = new Date().getTime()
+	const commentBox = eventTarget.closest('.add-comment')
+	const parentId = commentBox.dataset.parentId
+	const input = commentBox.querySelector('.add-comment__text__input').value
+	const newComment = createComment(curUsr.image, curUsr.userName, now, input, lastId, 0, parentId, replyTo)
+	container.insertBefore(newComment, commentBox)
+	commentBox.remove()
 }
 
 const saveUser = user => {
