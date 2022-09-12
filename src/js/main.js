@@ -5,6 +5,8 @@
 
 const container = document.querySelector('.container')
 let sendBtn = document.querySelector('.comment-box__footer__submit__btn')
+let plusVotes
+let minusVotes
 
 let data1
 let comments
@@ -184,6 +186,8 @@ function createEditPart(score, name, parentId) {
 	voteStats.textContent = score
 	const voteMinus = document.createElement('button')
 	voteMinus.classList.add('comment-box__edit__vote--minus')
+	votePlus.addEventListener('click', upVote)
+	voteMinus.addEventListener('click', downVote)
 	if (curUsr.userName === name) {
 		const manageDiv = document.createElement('div')
 		manageDiv.classList.add('comment-box__edit__manage')
@@ -322,6 +326,40 @@ const saveUser = user => {
 const getUser = () => {
 	let user = localStorage.getItem('currentUser')
 	test = JSON.parse(user)
+}
+
+const modifyVote = (e, num) => {
+	const voteParent = e.target.closest('.comment-box__edit__vote')
+	const voteStats = voteParent.querySelector('.comment-box__edit__vote__stats')
+	test = voteStats
+	if (voteStats != null) {
+		let val = Number(voteStats.textContent)
+		voteStats.textContent = val + num
+	}
+}
+
+const upVote = e => {
+	modifyVote(e, 1)
+}
+
+const downVote = e => {
+	modifyVote(e, -1)
+}
+
+//load vote elements, add listeners on vote change
+const loadVotes = () => {
+	plusVotes = document.querySelectorAll('.comment-box__edit__vote--plus')
+	minusVotes = document.querySelectorAll('.comment-box__edit__vote--minus')
+	if (plusVotes != null) {
+		plusVotes.forEach(el => {
+			el.addEventListener('click', upVote)
+		})
+	}
+	if (minusVotes != null) {
+		minusVotes.forEach(el => {
+			el.addEventListener('click', downVote)
+		})
+	}
 }
 
 document.addEventListener('DOMContentLoaded', fetchData)
