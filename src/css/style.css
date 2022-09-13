@@ -208,6 +208,25 @@ body .container .comment-box__edit__manage__item--edit__text {
   color: #5457b6;
   font-weight: bold;
 }
+body .container .comment-box__update {
+  display: flex;
+  justify-content: end;
+  align-items: end;
+  width: 100%;
+  padding: 0 50px;
+}
+body .container .comment-box__update__btn {
+  padding: 10px 20px;
+  background-color: #5457b6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+}
+body .container .comment-box__update__btn:hover {
+  opacity: 0.5;
+}
 body .container .add-comment__text {
   color: hsl(211deg, 10%, 45%);
   padding: 10px 20px;
@@ -236,6 +255,7 @@ body .container .add-comment__footer {
   margin: 0 10px;
   width: 100%;
   height: 50px;
+  pointer-events: none;
 }
 body .container .add-comment__footer__image {
   margin: 0 15px;
@@ -254,6 +274,10 @@ body .container .add-comment__footer__submit__btn {
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
+  pointer-events: all;
+}
+body .container .add-comment__footer__submit__btn:hover {
+  opacity: 0.5;
 }
 body .container .comment-response {
   position: relative;
@@ -369,6 +393,9 @@ body .attribution a {
   }
   body .container .add-comment__text {
     padding: 10px 108px 10px 56px;
+  }
+  body .container .add-comment__text--update {
+    padding: 10px 50px 10px 70px;
   }
   body .container .add-comment__footer {
     position: absolute;
