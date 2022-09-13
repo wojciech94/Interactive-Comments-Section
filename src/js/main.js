@@ -173,6 +173,7 @@ function createTextPart(content, replyTo) {
 		pBox.appendChild(spanReplyTo)
 	}
 	const spanMain = document.createElement('span')
+	spanMain.classList.add('text-content')
 	spanMain.textContent = content
 	pBox.appendChild(spanMain)
 	return pBox
@@ -213,6 +214,7 @@ function createEditPart(score, name, parentId) {
 		const editText = document.createElement('p')
 		editText.classList.add('comment-box__edit__manage__item--edit__text')
 		delBtn.addEventListener('click', showModal)
+		editBtn.addEventListener('click', editComment)
 		editText.textContent = 'Edit'
 		delBtn.dataset.parentId = parentId
 		editBtn.dataset.parentId = parentId
@@ -364,6 +366,59 @@ const cancelModal = () => {
 const deleteBox = () => {
 	modal.classList.remove('modal--active')
 	modalTarget.remove()
+}
+
+const editComment = e => {
+	console.log('Edit comment')
+	let box = e.target.closest('.comment-box')
+	box.classList.toggle('add-comment')
+	let target = box.querySelector('.response-target')
+	let content = box.querySelector('.text-content')
+	let str = ''
+	if (target != null) {
+		str += target.textContent
+		str += ' '
+	}
+	str += content.textContent
+	let textBox = createEditTextArea(str)
+	box.append(textBox)
+	let updateBox = document.createElement('div')
+	updateBox.classList.add('comment-box__update')
+	let btn = document.createElement('button')
+	btn.classList.add('comment-box__update__btn')
+	updateBox.append(btn)
+	btn.textContent = 'UPDATE'
+	box.append(updateBox)
+	let boxToRemove = box.querySelector('.comment-box__text')
+	boxToRemove.remove()
+	btn.addEventListener('click', updateComment)
+}
+
+function createEditTextArea(str) {
+	const addCommentText = document.createElement('div')
+	addCommentText.classList.add('add-comment__text')
+	addCommentText.classList.add('add-comment__text--update')
+	const textArea = document.createElement('textarea')
+	addCommentText.append(textArea)
+	textArea.textContent = str
+	textArea.classList.add('add-comment__text__input')
+	return addCommentText
+}
+
+const updateComment = e => {
+	const btn = e.target
+	const box = btn.closest('.comment-box')
+	let content = box.querySelector('textarea').value
+	let replyTo = content.split(' ')[0]
+	replyTo = replyTo.split('@')[1]
+	content = content.slice(replyTo.length + 1)
+	const textPart = createTextPart(content, replyTo)
+	box.append(textPart)
+	const updateBtn = box.querySelector('.comment-box__update')
+	const addComment = box.querySelector('.add-comment__text')
+	box.classList.remove('add-comment')
+	addComment.remove()
+	updateBtn.remove()
 }
 
 document.addEventListener('DOMContentLoaded', fetchData)
