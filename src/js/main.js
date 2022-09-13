@@ -4,9 +4,13 @@
 // textarea.style.height = Number(scHeight)
 
 const container = document.querySelector('.container')
+const modal = document.querySelector('.modal')
+const modalCancel = document.querySelector('.modal__area__buttons__cancel')
+const modalDelete = document.querySelector('.modal__area__buttons__delete')
 let sendBtn = document.querySelector('.comment-box__footer__submit__btn')
 let plusVotes
 let minusVotes
+let modalTarget
 
 let data1
 let comments
@@ -208,6 +212,7 @@ function createEditPart(score, name, parentId) {
 		editIcon.classList.add('comment-box__edit__manage__item--edit__icon')
 		const editText = document.createElement('p')
 		editText.classList.add('comment-box__edit__manage__item--edit__text')
+		delBtn.addEventListener('click', showModal)
 		editText.textContent = 'Edit'
 		delBtn.dataset.parentId = parentId
 		editBtn.dataset.parentId = parentId
@@ -346,20 +351,21 @@ const downVote = e => {
 	modifyVote(e, -1)
 }
 
-//load vote elements, add listeners on vote change
-const loadVotes = () => {
-	plusVotes = document.querySelectorAll('.comment-box__edit__vote--plus')
-	minusVotes = document.querySelectorAll('.comment-box__edit__vote--minus')
-	if (plusVotes != null) {
-		plusVotes.forEach(el => {
-			el.addEventListener('click', upVote)
-		})
-	}
-	if (minusVotes != null) {
-		minusVotes.forEach(el => {
-			el.addEventListener('click', downVote)
-		})
-	}
+const showModal = e => {
+	modal.classList.add('modal--active')
+	modalTarget = e.target.closest('.comment-box')
+	console.log(modalTarget)
+}
+
+const cancelModal = () => {
+	modal.classList.remove('modal--active')
+}
+
+const deleteBox = () => {
+	modal.classList.remove('modal--active')
+	modalTarget.remove()
 }
 
 document.addEventListener('DOMContentLoaded', fetchData)
+modalCancel.addEventListener('click', cancelModal)
+modalDelete.addEventListener('click', deleteBox)
