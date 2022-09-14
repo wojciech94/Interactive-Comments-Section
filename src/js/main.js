@@ -165,7 +165,6 @@ function createHeaderPart(imgSrc, name, update) {
 function createTextPart(content, replyTo) {
 	const pBox = document.createElement('p')
 	pBox.classList.add('comment-box__text')
-	console.log(replyTo)
 	if (replyTo != null) {
 		const spanReplyTo = document.createElement('span')
 		spanReplyTo.textContent = '@' + replyTo + ' '
@@ -184,6 +183,8 @@ function createEditPart(score, name, parentId) {
 	editPart.classList.add('comment-box__edit')
 	const voteDiv = document.createElement('div')
 	voteDiv.classList.add('comment-box__edit__vote')
+	voteDiv.dataset.plusCount = 0
+	voteDiv.dataset.minusCount = 0
 	const votePlus = document.createElement('button')
 	votePlus.classList.add('comment-box__edit__vote--plus')
 	const voteStats = document.createElement('p')
@@ -223,7 +224,6 @@ function createEditPart(score, name, parentId) {
 		delBtn.append(delIcon, delText)
 		editBtn.append(editIcon, editText)
 	} else {
-		console.log('ReplyTo:' + name)
 		const replyButton = document.createElement('button')
 		replyButton.classList.add('comment-box__edit__reply')
 		replyButton.dataset.replyTarget = name
@@ -284,7 +284,6 @@ const addReplyPart = e => {
 	const commentBox = createAddCommentPart()
 	let id = e.target.parentNode.dataset.parentId
 	let target = e.target.parentNode.dataset.replyTarget
-	console.log(test)
 	let nextId = Number(id) + 1
 	const submitBtn = commentBox.querySelector('.add-comment__footer__submit__btn')
 	submitBtn.textContent = 'REPLY'
@@ -308,9 +307,25 @@ const pushComment = () => {
 	const input = addCommentBox.querySelector('.add-comment__text__input')
 	const content = input.value
 	input.value = ''
+	test = curUsr.image
 	const newComment = createComment(curUsr.image, curUsr.userName, now, content, lastId, 0, nextMainId)
+	const commentObj = {
+		id: lastId,
+		content: content,
+		createdAt: now,
+		score: 0,
+		user: {
+			image: {
+				png: curUsr.image,
+			},
+			username: curUsr.userName,
+		},
+		replies: [],
+	}
+	const commentElement = new Comment(commentObj, nextMainId)
 
 	container.insertBefore(newComment, addCommentBox)
+	allComments.push(commentElement)
 }
 
 const pushReply = e => {
@@ -324,6 +339,7 @@ const pushReply = e => {
 	const newComment = createComment(curUsr.image, curUsr.userName, now, input, lastId, 0, parentId, replyTo)
 	container.insertBefore(newComment, commentBox)
 	commentBox.remove()
+	allReplies.push(newComment)
 }
 
 const saveUser = user => {
@@ -339,9 +355,31 @@ const modifyVote = (e, num) => {
 	const voteParent = e.target.closest('.comment-box__edit__vote')
 	const voteStats = voteParent.querySelector('.comment-box__edit__vote__stats')
 	test = voteStats
+	const togglePlus = voteParent.dataset.plusCount == 0 && voteParent.dataset.minusCount == 1
+	const toggleMinus = voteParent.dataset.plusCount == 1 && voteParent.dataset.minusCount == 0
 	if (voteStats != null) {
 		let val = Number(voteStats.textContent)
-		voteStats.textContent = val + num
+		if (num > 0 && togglePlus) {
+			voteStats.textContent = val + num * 2
+			voteParent.dataset.plusCount = 1
+			voteParent.dataset.minusCount = 0
+		} else if (num < 0 && toggleMinus) {
+			voteStats.textContent = val + num * 2
+			voteParent.dataset.plusCount = 0
+			voteParent.dataset.minusCount = 1
+		} else if (num > 0 && voteParent.dataset.plusCount == 0) {
+			voteStats.textContent = val + num
+			voteParent.dataset.plusCount = 1
+		} else if (num > 0) {
+			voteStats.textContent = val - num
+			voteParent.dataset.plusCount = 0
+		} else if (num < 0 && voteParent.dataset.minusCount == 0) {
+			voteStats.textContent = val + num
+			voteParent.dataset.minusCount = 1
+		} else {
+			voteStats.textContent = val - num
+			voteParent.dataset.minusCount = 0
+		}
 	}
 }
 
@@ -356,7 +394,6 @@ const downVote = e => {
 const showModal = e => {
 	modal.classList.add('modal--active')
 	modalTarget = e.target.closest('.comment-box')
-	console.log(modalTarget)
 }
 
 const cancelModal = () => {
@@ -369,7 +406,6 @@ const deleteBox = () => {
 }
 
 const editComment = e => {
-	console.log('Edit comment')
 	let box = e.target.closest('.comment-box')
 	box.classList.toggle('add-comment')
 	let target = box.querySelector('.response-target')
