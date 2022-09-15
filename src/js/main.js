@@ -337,18 +337,24 @@ const pushReply = e => {
 	const parentId = commentBox.dataset.parentId
 	const input = commentBox.querySelector('.add-comment__text__input').value
 	const newComment = createComment(curUsr.image, curUsr.userName, now, input, lastId, 0, parentId, replyTo)
+	const replyObj = {
+		id: lastId,
+		content: input,
+		createdAt: now,
+		score: 0,
+		replyingTo: replyTo,
+		user: {
+			image: {
+				png: curUsr.image,
+			},
+			username: curUsr.userName,
+		},
+	}
+	const replyElement = new Reply(replyObj, parentId)
+
 	container.insertBefore(newComment, commentBox)
 	commentBox.remove()
-	allReplies.push(newComment)
-}
-
-const saveUser = user => {
-	localStorage.setItem('currentUser', JSON.stringify(user))
-}
-
-const getUser = () => {
-	let user = localStorage.getItem('currentUser')
-	test = JSON.parse(user)
+	allReplies.push(replyElement)
 }
 
 const modifyVote = (e, num) => {
@@ -363,22 +369,30 @@ const modifyVote = (e, num) => {
 			voteStats.textContent = val + num * 2
 			voteParent.dataset.plusCount = 1
 			voteParent.dataset.minusCount = 0
+			voteStats.classList.toggle('comment-box__edit__vote__stats--up')
+			voteStats.classList.toggle('comment-box__edit__vote__stats--down')
 		} else if (num < 0 && toggleMinus) {
 			voteStats.textContent = val + num * 2
 			voteParent.dataset.plusCount = 0
 			voteParent.dataset.minusCount = 1
+			voteStats.classList.toggle('comment-box__edit__vote__stats--up')
+			voteStats.classList.toggle('comment-box__edit__vote__stats--down')
 		} else if (num > 0 && voteParent.dataset.plusCount == 0) {
 			voteStats.textContent = val + num
 			voteParent.dataset.plusCount = 1
+			voteStats.classList.add('comment-box__edit__vote__stats--up')
 		} else if (num > 0) {
 			voteStats.textContent = val - num
 			voteParent.dataset.plusCount = 0
+			voteStats.classList.remove('comment-box__edit__vote__stats--up')
 		} else if (num < 0 && voteParent.dataset.minusCount == 0) {
 			voteStats.textContent = val + num
 			voteParent.dataset.minusCount = 1
+			voteStats.classList.add('comment-box__edit__vote__stats--down')
 		} else {
 			voteStats.textContent = val - num
 			voteParent.dataset.minusCount = 0
+			voteStats.classList.remove('comment-box__edit__vote__stats--down')
 		}
 	}
 }
@@ -455,6 +469,33 @@ const updateComment = e => {
 	box.classList.remove('add-comment')
 	addComment.remove()
 	updateBtn.remove()
+}
+
+const saveUser = () => {
+	localStorage.setItem('currentUser', JSON.stringify(curUsr))
+}
+
+const getUser = () => {
+	let user = localStorage.getItem('currentUser')
+	test = JSON.parse(user)
+}
+
+const saveComments = () => {
+	localStorage.setItem('allComments', JSON.stringify(allComments))
+}
+
+const downloadComments = () => {
+	let comments = localStorage.getItem('allComments')
+	allComments = JSON.parse(comments)
+}
+
+const saveReplies = () => {
+	localStorage.setItem('allReplies', JSON.stringify(allReplies))
+}
+
+const downloadReplies = () => {
+	let replies = localStorage.getItem('allReplies')
+	allReplies = JSON.parse(replies)
 }
 
 document.addEventListener('DOMContentLoaded', fetchData)

@@ -138,6 +138,12 @@ body .container .comment-box__edit__vote__stats {
   color: #5457b6;
   font-weight: 500;
 }
+body .container .comment-box__edit__vote__stats--up {
+  color: hsl(124deg, 80%, 40%);
+}
+body .container .comment-box__edit__vote__stats--down {
+  color: hsl(357deg, 80%, 40%);
+}
 body .container .comment-box__edit__vote--minus {
   width: 36px;
   height: 36px;
@@ -291,7 +297,7 @@ body .container .comment-response::before {
   left: -25px;
   width: 2px;
   height: 100%;
-  background-color: hsl(228deg, 4%, 50%);
+  background-color: hsl(211deg, 10%, 80%);
   content: "";
 }
 body .modal {
