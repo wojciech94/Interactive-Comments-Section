@@ -1,8 +1,3 @@
-// Pobrać textarea
-// Monitorować wpisywanie tekstu (event keyup)
-// let scHeight = e.target.scrollHeight będzie wielkością obszaru
-// textarea.style.height = Number(scHeight)
-
 const container = document.querySelector('.container')
 const modal = document.querySelector('.modal')
 const modalCancel = document.querySelector('.modal__area__buttons__cancel')
@@ -50,7 +45,6 @@ class Reply {
 	}
 }
 
-//extract and modify reply object from json
 function createReplies(replies, parentId) {
 	let reps = []
 	replies.forEach(reply => {
@@ -125,7 +119,6 @@ function getComments(comments, pushComments = false) {
 	})
 }
 
-//Create comment from json data or local storage
 function createComment(image, name, date, content, id, score, parentId, replyTo = null) {
 	const boxDiv = document.createElement('div')
 	boxDiv.dataset.id = id
@@ -170,7 +163,7 @@ function createHeaderPart(imgSrc, name, update) {
 	}
 	const createdDiv = document.createElement('div')
 	createdDiv.classList.add('comment-box__header__update')
-	createdDiv.textContent = update
+	createdDiv.textContent = updateTime(update)
 	headerDiv.append(createdDiv)
 	return headerDiv
 }
@@ -267,6 +260,7 @@ const createAddCommentPart = () => {
 	textArea.name = 'comment'
 	textArea.placeholder = 'Add a comment...'
 	textArea.classList.add('add-comment__text__input')
+	textArea.addEventListener('keyup', adjustHeight)
 	commentFooter.classList.add('add-comment__footer')
 	const footerImg = document.createElement('img')
 	footerImg.classList.add('add-comment__footer__image')
@@ -427,14 +421,10 @@ function getCommentById(id, isMainComment) {
 
 function removeCommentReply(parentId, id) {
 	for (let i = 0; i < allComments.length; i++) {
-		console.log('f1')
 		if (allComments[i].mainId == parentId) {
-			console.log('i1')
 			let comment = allComments[i]
 			for (let j = comment.replies.length - 1; j > 0; j--) {
-				console.log('f2')
 				if (comment.replies[j].id == id) {
-					console.log('i2')
 					comment.replies.splice(j, 1)
 					break
 				}
@@ -509,17 +499,13 @@ const deleteBox = () => {
 	if (mainId != null) {
 		for (let i = allComments.length - 1; i > 0; i--) {
 			if (allComments[i].mainId == mainId) {
-				console.log('Found' + mainId)
 				allComments.splice(i, 1)
 				saveComments()
-			} else {
-				console.log('comment not found')
 			}
 		}
 	} else {
 		for (let j = allReplies.length - 1; j > 0; j--) {
 			if (allReplies[j].id == id) {
-				console.log(allReplies[j].content)
 				allReplies.splice(j, 1)
 				saveReplies()
 				break
@@ -593,7 +579,6 @@ const updateComment = e => {
 
 function updateCommentContent(content, id, mainId) {
 	let comment
-	//update replies didnt work
 	if (mainId != null) {
 		comment = getMainComment(mainId)
 		if (comment) {
@@ -601,7 +586,7 @@ function updateCommentContent(content, id, mainId) {
 			saveComments()
 		}
 	} else {
-		let reply = getReplyComment()
+		let reply = getReplyComment(id)
 		if (reply) {
 			reply.content = content
 			saveReplies()
@@ -617,31 +602,59 @@ function updateCommentContent(content, id, mainId) {
 	}
 }
 
+function updateTime(timeStamp) {
+	if (typeof timeStamp === 'number') {
+		let now = new Date().getTime()
+		let delta = now - timeStamp
+		if (delta > 31557600000) {
+			return Math.floor(delta / 31557600000) + 'years ago'
+		} else if (delta > 2629800000) {
+			return Math.floor(delta / 2629800000) + 'months ago'
+		} else if (delta > 657450000) {
+			return Math.floor(delta / 604800017) + 'weeks ago'
+		} else if (delta > 86400000) {
+			return Math.floor(delta / 86400000) + 'days ago'
+		} else if (delta > 3600000) {
+			return Math.floor(delta / 3600000) + 'hours ago'
+		} else if (delta > 60000) {
+			return Math.floor(delta / 60000) + 'minutes ago'
+		} else {
+			return 'now'
+		}
+	}
+	return timeStamp
+}
+
 function saveUser() {
 	localStorage.setItem('currentUser', JSON.stringify(curUsr))
 }
 
-const getUser = () => {
+function getUser() {
 	let user = localStorage.getItem('currentUser')
 	curUsr = JSON.parse(user)
 }
 
-const saveComments = () => {
+function saveComments() {
 	localStorage.setItem('allComments', JSON.stringify(allComments))
 }
 
-const downloadComments = () => {
+function downloadComments() {
 	let comments = localStorage.getItem('allComments')
 	allComments = JSON.parse(comments)
 }
 
-const saveReplies = () => {
+function saveReplies() {
 	localStorage.setItem('allReplies', JSON.stringify(allReplies))
 }
 
-const downloadReplies = () => {
+function downloadReplies() {
 	let replies = localStorage.getItem('allReplies')
 	allReplies = JSON.parse(replies)
+}
+
+const adjustHeight = e => {
+	let scrollHeight = e.target.scrollHeight
+	e.target.style.height = scrollHeight + 'px'
 }
 
 document.addEventListener('DOMContentLoaded', fetchData)
