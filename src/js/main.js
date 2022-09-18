@@ -10,15 +10,10 @@ const modalDelete = document.querySelector('.modal__area__buttons__delete')
 let sendBtn = document.querySelector('.comment-box__footer__submit__btn')
 let plusVotes
 let minusVotes
+
 let modalTarget
 
-let data1
-let comments
-let cb
-let test
 let curUsr
-let testComment
-let testReply
 let nextMainId = 0
 let lastId = 0
 let allComments = []
@@ -26,8 +21,8 @@ let allReplies = []
 
 class User {
 	constructor(currentUser) {
-		this.userName = currentUser.username
-		this.image = currentUser.image.png
+		this.userName = currentUser.username ? currentUser.username : currentUser.userName
+		this.image = currentUser.image.png ? currentUser.image.png : currentUser.image
 	}
 }
 
@@ -35,7 +30,7 @@ class Comment {
 	constructor(comment, mainId) {
 		this.id = comment.id
 		this.content = comment.content
-		this.date = comment.createdAt
+		this.createdAt = comment.createdAt
 		this.score = comment.score
 		this.user = new User(comment.user)
 		this.replies = createReplies(comment.replies, mainId)
@@ -47,10 +42,10 @@ class Reply {
 	constructor(reply, parentId) {
 		this.id = reply.id
 		this.content = reply.content
-		this.date = reply.createdAt
+		this.createdAt = reply.createdAt
 		this.score = reply.score
 		this.user = new User(reply.user)
-		this.replyTo = reply.replyingTo
+		this.replyingTo = reply.replyingTo
 		this.parentId = parentId
 	}
 }
@@ -66,46 +61,64 @@ function createReplies(replies, parentId) {
 }
 
 const fetchData = () => {
-	fetch('data.json')
-		.then(response => response.json())
-		.then(data => {
-			data1 = data
-			curUsr = new User(data1.currentUser)
-			comments = data1.comments
-			getComments(comments)
-			lastId = allComments.length + allReplies.length
-			addCommentPart()
-		})
+	if (
+		localStorage.getItem('currentUser') &&
+		localStorage.getItem('allComments') &&
+		localStorage.getItem('allReplies')
+	) {
+		getUser()
+		downloadComments()
+		downloadReplies()
+		getComments(allComments)
+		lastId = allComments.length + allReplies.length
+		addCommentPart()
+	} else {
+		fetch('data.json')
+			.then(response => response.json())
+			.then(data => {
+				curUsr = new User(data.currentUser)
+				getComments(data.comments, true)
+				lastId = allComments.length + allReplies.length
+				addCommentPart()
+				saveUser()
+				saveComments()
+				saveReplies()
+			})
+	}
 }
 
-const getComments = comments => {
+function getComments(comments, pushComments = false) {
 	comments.forEach((element, parentId) => {
-		testComment = new Comment(element, parentId)
-		allComments.push(testComment)
+		let newComment = new Comment(element, parentId)
+		if (pushComments) {
+			allComments.push(newComment)
+		}
 		nextMainId++
 
 		createComment(
-			testComment.user.image,
-			testComment.user.userName,
-			testComment.date,
-			testComment.content,
-			testComment.id,
-			testComment.score,
+			newComment.user.image,
+			newComment.user.userName,
+			newComment.createdAt,
+			newComment.content,
+			newComment.id,
+			newComment.score,
 			parentId
 		)
 
-		if (testComment.replies.length > 0) {
-			testComment.replies.forEach(reply => {
-				allReplies.push(reply)
+		if (newComment.replies.length > 0) {
+			newComment.replies.forEach(reply => {
+				if (pushComments) {
+					allReplies.push(reply)
+				}
 				createComment(
 					reply.user.image,
 					reply.user.userName,
-					reply.date,
+					reply.createdAt,
 					reply.content,
 					reply.id,
 					reply.score,
 					parentId,
-					reply.replyTo
+					reply.replyingTo
 				)
 			})
 		}
@@ -162,7 +175,7 @@ function createHeaderPart(imgSrc, name, update) {
 	return headerDiv
 }
 
-function createTextPart(content, replyTo) {
+function createTextPart(content, replyTo = null) {
 	const pBox = document.createElement('p')
 	pBox.classList.add('comment-box__text')
 	if (replyTo != null) {
@@ -294,6 +307,14 @@ const addReplyPart = e => {
 	let beforeElement = container.querySelector(`.comment-box[data-main-id="${nextId}"]`)
 	if (beforeElement != null) {
 		container.insertBefore(commentBox, beforeElement)
+	} else if (nextMainId > nextId) {
+		do {
+			nextId++
+			beforeElement = container.querySelector(`.comment-box[data-main-id="${nextId}"]`)
+			if (beforeElement != null) {
+				container.insertBefore(commentBox, beforeElement)
+			}
+		} while (nextMainId > nextId)
 	} else {
 		const addCommentBox = document.querySelector('.main-comment')
 		container.insertBefore(commentBox, addCommentBox)
@@ -326,6 +347,8 @@ const pushComment = () => {
 
 	container.insertBefore(newComment, addCommentBox)
 	allComments.push(commentElement)
+	saveComments()
+	nextMainId++
 }
 
 const pushReply = e => {
@@ -355,6 +378,70 @@ const pushReply = e => {
 	container.insertBefore(newComment, commentBox)
 	commentBox.remove()
 	allReplies.push(replyElement)
+	let commentParent = getMainComment(parentId)
+	commentParent.replies.push(replyElement)
+	saveReplies()
+	saveComments()
+}
+
+function getMainComment(mainId) {
+	for (let i = 0; i < allComments.length; i++) {
+		if (allComments[i].mainId == mainId) {
+			return allComments[i]
+		}
+	}
+	return null
+}
+
+function getReplyComment(id) {
+	for (let i = 0; i < allReplies.length; i++) {
+		if (allReplies[i].id == id) {
+			return allReplies[i]
+		}
+	}
+	return null
+}
+
+function getReplyFromMain(comment, id) {
+	let replies = comment.replies
+	for (let i = replies.length - 1; i > 0; i--) {
+		if (replies[i].id == id) {
+			return replies[i]
+		}
+	}
+	return null
+}
+
+function getCommentById(id, isMainComment) {
+	if (isMainComment) {
+		for (let i = 0; i < allComments.length; i++) {
+			if (allComments[i].id == id) {
+				return allComments[i]
+			}
+		}
+		return null
+	} else {
+		getReplyComment(id)
+	}
+}
+
+function removeCommentReply(parentId, id) {
+	for (let i = 0; i < allComments.length; i++) {
+		console.log('f1')
+		if (allComments[i].mainId == parentId) {
+			console.log('i1')
+			let comment = allComments[i]
+			for (let j = comment.replies.length - 1; j > 0; j--) {
+				console.log('f2')
+				if (comment.replies[j].id == id) {
+					console.log('i2')
+					comment.replies.splice(j, 1)
+					break
+				}
+			}
+			break
+		}
+	}
 }
 
 const modifyVote = (e, num) => {
@@ -416,6 +503,31 @@ const cancelModal = () => {
 
 const deleteBox = () => {
 	modal.classList.remove('modal--active')
+	let id = modalTarget.dataset.id
+	let mainId = modalTarget.dataset.mainId
+	let parentId = modalTarget.dataset.parentId
+	if (mainId != null) {
+		for (let i = allComments.length - 1; i > 0; i--) {
+			if (allComments[i].mainId == mainId) {
+				console.log('Found' + mainId)
+				allComments.splice(i, 1)
+				saveComments()
+			} else {
+				console.log('comment not found')
+			}
+		}
+	} else {
+		for (let j = allReplies.length - 1; j > 0; j--) {
+			if (allReplies[j].id == id) {
+				console.log(allReplies[j].content)
+				allReplies.splice(j, 1)
+				saveReplies()
+				break
+			}
+		}
+		removeCommentReply(parentId, id)
+		saveComments()
+	}
 	modalTarget.remove()
 }
 
@@ -458,26 +570,60 @@ function createEditTextArea(str) {
 const updateComment = e => {
 	const btn = e.target
 	const box = btn.closest('.comment-box')
+	let id = box.dataset.id
+	let mainId = box.dataset.mainId
 	let content = box.querySelector('textarea').value
-	let replyTo = content.split(' ')[0]
-	replyTo = replyTo.split('@')[1]
-	content = content.slice(replyTo.length + 1)
-	const textPart = createTextPart(content, replyTo)
+	let textPart = ''
+	if (content.includes('@')) {
+		let replyTo = content.split(' ')[0]
+		replyTo = replyTo.split('@')[1]
+		content = content.slice(replyTo.length + 1)
+		textPart = createTextPart(content, replyTo)
+	} else {
+		textPart = createTextPart(content)
+	}
 	box.append(textPart)
 	const updateBtn = box.querySelector('.comment-box__update')
 	const addComment = box.querySelector('.add-comment__text')
 	box.classList.remove('add-comment')
 	addComment.remove()
 	updateBtn.remove()
+	updateCommentContent(content, id, mainId)
 }
 
-const saveUser = () => {
+function updateCommentContent(content, id, mainId) {
+	let comment
+	//update replies didnt work
+	if (mainId != null) {
+		comment = getMainComment(mainId)
+		if (comment) {
+			comment.content = content
+			saveComments()
+		}
+	} else {
+		let reply = getReplyComment()
+		if (reply) {
+			reply.content = content
+			saveReplies()
+			comment = getMainComment(reply.parentId)
+			if (comment) {
+				let reply2 = getReplyFromMain(comment, id)
+				if (reply2) {
+					reply2.content = content
+					saveComments()
+				}
+			}
+		}
+	}
+}
+
+function saveUser() {
 	localStorage.setItem('currentUser', JSON.stringify(curUsr))
 }
 
 const getUser = () => {
 	let user = localStorage.getItem('currentUser')
-	test = JSON.parse(user)
+	curUsr = JSON.parse(user)
 }
 
 const saveComments = () => {
