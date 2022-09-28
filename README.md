@@ -33,7 +33,7 @@ Users should be able to:
 
 ### Links
 
-- Solution URL: [Solution](https://wojciech94.github.io/Interactive-Comments-Section/)
+- Solution URL: [Solution](https://github.com/wojciech94/Interactive-Comments-Section/)
 - Live Site URL: [Site](https://wojciech94.github.io/Interactive-Comments-Section/)
 
 ## Author
