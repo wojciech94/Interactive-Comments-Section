@@ -8,6 +8,8 @@ let minusVotes
 
 let modalTarget
 
+let times = document.querySelectorAll('.comment-box__header__update')
+
 let curUsr
 let nextMainId = 0
 let lastId = 0
@@ -25,7 +27,7 @@ class Comment {
 	constructor(comment, mainId) {
 		this.id = comment.id
 		this.content = comment.content
-		this.createdAt = comment.createdAt
+		this.createdAt = convertStringTime(comment.createdAt)
 		this.score = comment.score
 		this.user = new User(comment.user)
 		this.replies = createReplies(comment.replies, mainId)
@@ -37,7 +39,7 @@ class Reply {
 	constructor(reply, parentId) {
 		this.id = reply.id
 		this.content = reply.content
-		this.createdAt = reply.createdAt
+		this.createdAt = convertStringTime(reply.createdAt)
 		this.score = reply.score
 		this.user = new User(reply.user)
 		this.replyingTo = reply.replyingTo
@@ -261,6 +263,9 @@ const createAddCommentPart = () => {
 	textArea.placeholder = 'Add a comment...'
 	textArea.classList.add('add-comment__text__input')
 	textArea.addEventListener('keyup', adjustHeight)
+	setTimeout(() => {
+		textArea.focus({ focusVisible: true })
+	}, 0)
 	commentFooter.classList.add('add-comment__footer')
 	const footerImg = document.createElement('img')
 	footerImg.classList.add('add-comment__footer__image')
@@ -288,6 +293,10 @@ const addCommentPart = () => {
 }
 
 const addReplyPart = e => {
+	const unpushedReply = document.querySelector('.comment-response.add-comment')
+	if (unpushedReply) {
+		unpushedReply.remove()
+	}
 	const commentBox = createAddCommentPart()
 	let id = e.target.parentNode.dataset.parentId
 	let target = e.target.parentNode.dataset.replyTarget
@@ -316,11 +325,14 @@ const addReplyPart = e => {
 }
 
 const pushComment = () => {
-	lastId++
-	const now = new Date().getTime()
 	const addCommentBox = document.querySelector('.main-comment')
 	const input = addCommentBox.querySelector('.add-comment__text__input')
 	const content = input.value
+	if (content === '') {
+		return
+	}
+	lastId++
+	const now = new Date().getTime()
 	input.value = ''
 	test = curUsr.image
 	const newComment = createComment(curUsr.image, curUsr.userName, now, content, lastId, 0, nextMainId)
@@ -515,6 +527,12 @@ const deleteBox = () => {
 		saveComments()
 	}
 	modalTarget.remove()
+	const mainComments = document.querySelectorAll('.comment-box[data-main-id]')
+	let max = 0
+	mainComments.forEach(comment => {
+		max = comment.dataset.mainId > max ? Number(comment.dataset.mainId) + 1 : max
+	})
+	nextMainId = max
 }
 
 const editComment = e => {
@@ -550,6 +568,9 @@ function createEditTextArea(str) {
 	addCommentText.append(textArea)
 	textArea.textContent = str
 	textArea.classList.add('add-comment__text__input')
+	setTimeout(() => {
+		textArea.focus({ focusVisible: true })
+	}, 0)
 	return addCommentText
 }
 
@@ -602,27 +623,53 @@ function updateCommentContent(content, id, mainId) {
 	}
 }
 
+//update comment time (now - created timestamp)
 function updateTime(timeStamp) {
 	if (typeof timeStamp === 'number') {
 		let now = new Date().getTime()
 		let delta = now - timeStamp
 		if (delta > 31557600000) {
-			return Math.floor(delta / 31557600000) + 'years ago'
+			return Math.floor(delta / 31557600000) + ' years ago'
 		} else if (delta > 2629800000) {
-			return Math.floor(delta / 2629800000) + 'months ago'
+			return Math.floor(delta / 2629800000) + ' months ago'
 		} else if (delta > 657450000) {
-			return Math.floor(delta / 604800017) + 'weeks ago'
+			return Math.floor(delta / 604800000) + ' weeks ago'
 		} else if (delta > 86400000) {
-			return Math.floor(delta / 86400000) + 'days ago'
+			return Math.floor(delta / 86400000) + ' days ago'
 		} else if (delta > 3600000) {
-			return Math.floor(delta / 3600000) + 'hours ago'
+			return Math.floor(delta / 3600000) + ' hours ago'
 		} else if (delta > 60000) {
-			return Math.floor(delta / 60000) + 'minutes ago'
+			return Math.floor(delta / 60000) + ' minutes ago'
 		} else {
 			return 'now'
 		}
 	}
 	return timeStamp
+}
+
+//Convert string time to timestamps
+function convertStringTime(timeAgo) {
+	if (Number(timeAgo) !== NaN) {
+		return timeAgo
+	} else if (typeof timeAgo === 'string') {
+		let now = new Date().getTime()
+		let num = timeAgo.split(' ')[0]
+		if (timeAgo.includes('year')) {
+			return now - 31557600000 * num
+		} else if (timeAgo.includes('month')) {
+			return now - 2629800000 * num
+		} else if (timeAgo.includes('week')) {
+			return now - 604800000 * num
+		} else if (timeAgo.includes('day')) {
+			return now - 86400000 * num
+		} else if (timeAgo.includes('hours')) {
+			return now - 3600000 * num
+		} else if (timeAgo.includes('minutes')) {
+			return now - 60000 * num
+		} else {
+			return now
+		}
+	}
 }
 
 function saveUser() {
